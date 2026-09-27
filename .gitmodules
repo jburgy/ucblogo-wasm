@@ -1,0 +1,4 @@
+[submodule "ucblogo"]
+	path = ucblogo
+	url = https://github.com/jburgy/ucblogo-code.git
+	branch = wasm

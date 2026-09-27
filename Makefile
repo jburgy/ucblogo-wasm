@@ -1,16 +1,15 @@
 CC = emcc
 UCBLOGO = ucblogo
 PTY = node_modules/xterm-pty/emscripten-pty.js
+VPATH = $(UCBLOGO) wasm
 
-SOURCES = coms.c error.c eval.c files.c graphics.c init.c intern.c lists.c \
-	logodata.c main.c math.c mem.c paren.c parse.c print.c term.c \
-	turtleshape.c wrksp.c
-OBJECTS = $(addprefix build/,$(SOURCES:.c=.o)) build/wasmgraphics.o build/termcap.o
+SOURCES = coms.c error.c eval.c files.c graphics.c init.c intern.c libloc.c \
+	lists.c logodata.c main.c math.c mem.c paren.c parse.c print.c term.c \
+	turtleshape.c wrksp.c wasmgraphics.c termcap.c
+OBJECTS = $(addprefix build/,$(SOURCES:.c=.o))
 
-CFLAGS = -O2 -DHAVE_CONFIG_H -Iwasm -I$(UCBLOGO) -Wno-write-strings \
-	-Wno-unused-variable -Wno-parentheses -Wno-dangling-else
-LOCATIONS = -DLIBLOC='"$(1)/logolib"' -DHELPLOC='"$(1)/helpfiles"' \
-	-DCSLSLOC='"$(1)/csls"' -DTEMPLOC='"/tmp"'
+CFLAGS = -O2 -include config.h -Iwasm -I$(UCBLOGO) \
+	-Wno-write-strings -Wno-unused-variable
 
 # The GC scans the C stack for NODE pointers, but optimized wasm keeps most
 # of them in locals where it can't see them: spill-pointers puts them back
@@ -33,30 +32,19 @@ WEB = dist/index.html dist/logo.mjs dist/xterm.js dist/xterm.css dist/xterm-pty.
 
 all : $(WEB)
 
-dist/logo.mjs : $(OBJECTS) build/libloc.o $(PTY) $(wildcard lib/*)
+dist/logo.mjs : $(OBJECTS) $(PTY) $(wildcard lib/*)
 	@mkdir -p $(@D)
 	$(CC) $(LDFLAGS) -sENVIRONMENT=web -sFORCE_FILESYSTEM --js-library=$(PTY) \
-		-sEXPORTED_RUNTIME_METHODS=FS $(PRELOAD) -o $@ $(OBJECTS) build/libloc.o
+		-sEXPORTED_RUNTIME_METHODS=FS $(PRELOAD) -o $@ $(OBJECTS)
 
 # Reads stdin and the real file system; used to run the upstream unit tests.
-build/logo-node.mjs : $(OBJECTS) build/libloc-node.o
-	$(CC) $(LDFLAGS) -sENVIRONMENT=node -sNODERAWFS -o $@ $^
+build/logo-node.mjs : $(OBJECTS)
+	$(CC) $(LDFLAGS) -sENVIRONMENT=node -sNODERAWFS -sEXPORTED_RUNTIME_METHODS=ENV \
+		-o $@ $^
 
-build/%.o : $(UCBLOGO)/%.c wasm/config.h wasm/wasmgraphics.h
+build/%.o : %.c wasm/config.h wasm/wasmgraphics.h
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c -o $@ $<
-
-build/%.o : wasm/%.c wasm/config.h wasm/wasmgraphics.h
-	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-build/libloc.o : $(UCBLOGO)/libloc.c
-	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(call LOCATIONS,) -c -o $@ $<
-
-build/libloc-node.o : $(UCBLOGO)/libloc.c
-	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(call LOCATIONS,$(CURDIR)/$(UCBLOGO)) -c -o $@ $<
 
 dist/index.html : web/index.html
 dist/xterm.js : node_modules/@xterm/xterm/lib/xterm.js
@@ -67,12 +55,13 @@ dist/index.html dist/xterm.js dist/xterm.css dist/xterm-pty.mjs :
 	@mkdir -p $(@D)
 	cp $< $@
 
-node_modules/% : package-lock.json
-	npm ci
-
-# NODERAWFS crashes on TIOCGWINSZ when stdout is a tty, hence the cat.
+# tee keeps NODERAWFS off a real tty, where it crashes on TIOCGWINSZ.
+# The OOP tests need --enable-objects, which the native build lacks too.
 test : build/logo-node.mjs
-	cd $(UCBLOGO)/tests && printf 'RunAll\nbye\n' | node ../../test/run.mjs UnitTests.lg | cat
+	cd $(UCBLOGO)/tests && printf 'RunAll\nbye\n' | node ../../test/run.mjs UnitTests.lg \
+		| tee ../../build/test.log
+	grep -q 'All tests completed' build/test.log
+	! grep -v '^Tests.OOP' build/test.log | grep -E '(Failed|Error)$$'
 
 clean :
 	rm -rf build dist

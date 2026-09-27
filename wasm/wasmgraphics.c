@@ -1,9 +1,5 @@
 /* Canvas graphics for UCBLogo compiled with Emscripten. */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <emscripten.h>
 #include <stdlib.h>
 #include <string.h>
@@ -129,40 +125,38 @@ void wasm_line_to(int x, int y) {
     wasm_pen.ypos = y;
 }
 
-EM_JS(void, js_label, (const char *s, int x, int y, uint32_t *fb, int w, int h,
-                       uint32_t color, int mode, uint32_t bg), {
+#define LABEL_HEIGHT 20
+
+/* Renders s into mask, one byte per pixel, and returns its width */
+EM_JS(int, js_label, (const char *s, unsigned char *mask, int max_width,
+                      int height, int *ascent), {
     const text = UTF8ToString(s);
-    const canvas = Module.labelCanvas || (Module.labelCanvas = new OffscreenCanvas(1, 1));
-    let ctx = canvas.getContext("2d", { willReadFrequently: true });
-    const font = "16px monospace";
-    ctx.font = font;
-    const m = ctx.measureText(text);
-    const ascent = Math.ceil(m.fontBoundingBoxAscent ?? 12);
-    const cw = Math.ceil(m.width) || 1;
-    const ch = ascent + Math.ceil(m.fontBoundingBoxDescent ?? 4);
-    canvas.width = cw;
-    canvas.height = ch;
-    ctx = canvas.getContext("2d", { willReadFrequently: true });
-    ctx.font = font;
+    const canvas = Module.labelCanvas ||= new OffscreenCanvas(1, 1);
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.font = "16px monospace";
+    const metrics = ctx.measureText(text);
+    const w = Math.min(max_width, Math.ceil(metrics.width));
+    if (!w) return 0;
+    const top = Math.ceil(metrics.fontBoundingBoxAscent);
+    canvas.width = w;
+    canvas.height = height;
+    ctx.font = "16px monospace";
     ctx.fillStyle = "#fff";
-    ctx.fillText(text, 0, ascent);
-    const alpha = ctx.getImageData(0, 0, cw, ch).data;
-    const pixels = HEAPU32.subarray(fb >> 2, (fb >> 2) + w * h);
-    for (let j = 0; j < ch; j++) {
-        const py = y - ascent + j;
-        if (py < 0 || py >= h) continue;
-        for (let i = 0; i < cw; i++) {
-            const px = x + i;
-            if (px < 0 || px >= w || alpha[4 * (j * cw + i) + 3] < 128) continue;
-            const k = py * w + px;
-            pixels[k] = mode == 1 ? bg : mode == 2 ? pixels[k] ^ (color & 0xffffff) : color;
-        }
-    }
+    ctx.fillText(text, 0, top);
+    const rgba = ctx.getImageData(0, 0, w, height).data;
+    for (let i = 0; i < w * height; i++) HEAPU8[mask + i] = rgba[4 * i + 3] >= 128;
+    HEAP32[ascent >> 2] = top;
+    return w;
 });
 
 void wasm_label(char *s) {
-    js_label(s, wasm_pen.xpos, wasm_pen.ypos, fb, screen_width, screen_height,
-             pen_rgba, wasm_pen.pm, rgba(back_ground));
+    static unsigned char mask[screen_width * LABEL_HEIGHT];
+    int ascent, w = js_label(s, mask, screen_width, LABEL_HEIGHT, &ascent);
+
+    for (int j = 0; j < LABEL_HEIGHT; j++)
+        for (int i = 0; i < w; i++)
+            if (mask[j * w + i])
+                put(wasm_pen.xpos + i, wasm_pen.ypos - ascent + j, pen_rgba);
     dirty = 1;
 }
 

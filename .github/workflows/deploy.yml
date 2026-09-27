@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -19,12 +21,7 @@ jobs:
           version: 6.0.2
           actions-cache-folder: emsdk-cache
       - run: npm ci
-      - run: make --jobs=4 all build/logo-node.mjs
-      # OOP tests need --enable-objects, which the default native build lacks too
-      - run: |
-          make test | tee test.log
-          grep -q 'All tests completed' test.log
-          ! grep -v '^Tests.OOP' test.log | grep -E '(Failed|Error)$'
+      - run: make --jobs=4 all test
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

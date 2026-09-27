@@ -28,6 +28,7 @@ repete 36 [carre 100 td 10]
 Needs [Emscripten](https://emscripten.org/) (tested with 6.0.2) and Node.
 
 ```sh
+git clone --recursive https://github.com/jburgy/ucblogo-wasm.git
 npm ci
 make          # dist/ is the static site
 make test     # upstream unit tests on a Node build
@@ -36,11 +37,13 @@ python3 -m http.server -d dist
 
 ## How the port works
 
-- [ucblogo/](ucblogo/) is upstream at `3170933`, vendored with
-  `git subtree --squash`. Upstream is patched in three places, all under
-  `#ifdef __EMSCRIPTEN__`: pick the canvas backend and let the page draw the
-  turtle (`graphics.c`), yield to the browser between instructions (`eval.c`),
-  and sleep asynchronously for `WAIT` (`coms.c`).
+- [ucblogo/](ucblogo/) is a submodule tracking the `wasm` branch of
+  [jburgy/ucblogo-code](https://github.com/jburgy/ucblogo-code/tree/wasm):
+  upstream plus three hooks, all under `#ifdef __EMSCRIPTEN__`, proposed in
+  [jrincayc/ucblogo-code#255](https://github.com/jrincayc/ucblogo-code/pull/255).
+  They pick the canvas backend and let the page draw the turtle (`graphics.c`),
+  yield to the browser between instructions (`eval.c`), and sleep
+  asynchronously for `WAIT` (`coms.c`).
 - [wasm/wasmgraphics.c](wasm/wasmgraphics.c) rasterizes lines into a 640×400
   framebuffer (the Smaky 100's resolution) that the page copies to the canvas
   each animation frame, so XOR pens and `FILL` are pixel-exact.
