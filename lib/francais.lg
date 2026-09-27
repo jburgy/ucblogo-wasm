@@ -1,0 +1,119 @@
+; Vocabulaire français, dans l'esprit du LOGO des écoles romandes.
+; Les primitives anglaises restent disponibles, sauf CT qui cache la tortue.
+
+make "redefp "true
+
+copydef "pour "to
+
+; La tortue
+copydef "avance "forward
+copydef "av "forward
+copydef "recule "back
+copydef "re "back
+copydef "tournedroite "right
+copydef "td "right
+copydef "droite "right
+copydef "dr "right
+copydef "tournegauche "left
+copydef "tg "left
+copydef "gauche "left
+copydef "ga "left
+copydef "levecrayon "penup
+copydef "lc "penup
+copydef "baissecrayon "pendown
+copydef "bc "pendown
+copydef "gomme "penerase
+copydef "inversecrayon "penreverse
+copydef "cachetortue "hideturtle
+copydef "ct "hideturtle
+copydef "montretortue "showturtle
+copydef "mt "showturtle
+copydef "videecran "clearscreen
+copydef "ve "clearscreen
+copydef "nettoie "clean
+copydef "origine "home
+copydef "cap "heading
+copydef "fixecap "setheading
+copydef "fcap "setheading
+copydef "position "pos
+copydef "fixepos "setpos
+copydef "fixexy "setxy
+copydef "fixex "setx
+copydef "fixey "sety
+copydef "vers "towards
+copydef "fixecouleurcrayon "setpencolor
+copydef "fcc "setpencolor
+copydef "couleurcrayon "pencolor
+copydef "fixecouleurfond "setbackground
+copydef "fixetaillecrayon "setpensize
+copydef "remplis "fill
+copydef "enroule "wrap
+copydef "clos "fence
+copydef "fenetre "window
+
+; Contrôle
+copydef "repete "repeat
+copydef "répète "repeat
+copydef "compteur "repcount
+copydef "toujours "forever
+copydef "si "if
+copydef "sisinon "ifelse
+copydef "sinon "ifelse
+copydef "retourne "output
+copydef "stoppe "stop
+copydef "execute "run
+copydef "exécute "run
+copydef "attends "wait
+
+; Entrées et sorties
+copydef "ecris "print
+copydef "écris "print
+copydef "ec "print
+copydef "tape "type
+copydef "montre "show
+copydef "videtexte "cleartext
+copydef "lisliste "readlist
+copydef "lismot "readword
+copydef "liscar "readchar
+
+; Variables
+copydef "donne "make
+copydef "chose "thing
+copydef "locale "local
+
+; Mots et listes
+copydef "mot "word
+copydef "liste "list
+copydef "phrase "sentence
+copydef "ph "sentence
+copydef "premier "first
+copydef "dernier "last
+copydef "saufpremier "butfirst
+copydef "sp "butfirst
+copydef "saufdernier "butlast
+copydef "sd "butlast
+copydef "metspremier "fput
+copydef "metsdernier "lput
+copydef "element "item
+copydef "élément "item
+copydef "compte "count
+copydef "vide? "emptyp
+copydef "membre? "memberp
+copydef "nombre? "numberp
+copydef "mot? "wordp
+copydef "liste? "listp
+
+; Nombres et logique
+copydef "somme "sum
+copydef "produit "product
+copydef "reste "remainder
+copydef "racine "sqrt
+copydef "arrondi "round
+copydef "entier "int
+copydef "hasard "random
+copydef "et "and
+copydef "ou "or
+copydef "non "not
+
+make "redefp "false
+make "usealternatenames "true

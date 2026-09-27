@@ -1,0 +1,9 @@
+{
+  "name": "ucblogo-wasm",
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "@xterm/xterm": "^5.5.0",
+    "xterm-pty": "^0.12.0"
+  }
+}

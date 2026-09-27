@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LOGO</title>
+    <link rel="stylesheet" href="xterm.css">
+    <style>
+        body {
+            margin: 0 auto;
+            max-width: 660px;
+            padding: 10px;
+            background: #111;
+            color: #ccc;
+            font-family: sans-serif;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            aspect-ratio: 640 / 400;
+            image-rendering: pixelated;
+            background: #000;
+        }
+        #terminal {
+            margin-top: 6px;
+        }
+        nav {
+            font-size: small;
+            text-align: right;
+        }
+        a {
+            color: #8cf;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="640" height="400"></canvas>
+    <div id="terminal"></div>
+    <nav id="nav"></nav>
+    <script type="module">
+        import "./xterm.js";
+        import { openpty } from "./xterm-pty.mjs";
+        import createLogo from "./logo.mjs";
+
+        const french = new URLSearchParams(location.search).get("lang") !== "en";
+        document.documentElement.lang = french ? "fr" : "en";
+        document.getElementById("nav").innerHTML = french
+            ? '<a href="?lang=en">English</a>'
+            : '<a href="?lang=fr">Français</a>';
+
+        const xterm = new Terminal({
+            rows: 12,
+            cols: 80,
+            fontSize: 13,
+            cursorBlink: true,
+            theme: { background: "#000" },
+        });
+        xterm.open(document.getElementById("terminal"));
+        xterm.focus();
+
+        const { master, slave } = openpty();
+        xterm.loadAddon(master);
+
+        await createLogo({
+            pty: slave,
+            canvas: document.getElementById("canvas"),
+            preRun: [(module) => {
+                if (!french) return;
+                // UCBLogo reads ./Messages before logolib/Messages, then ~/startup.lg
+                module.FS.symlink("/logolib/Messages.fr", "/Messages");
+                module.FS.symlink("/lib/francais.lg", "/home/web_user/startup.lg");
+            }],
+            onExit: () => slave.write("\r\n[" + (french ? "Logo terminé" : "Logo exited") + "]\r\n"),
+        });
+    </script>
+</body>
+</html>
