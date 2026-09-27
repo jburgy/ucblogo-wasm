@@ -4,8 +4,8 @@
 WebAssembly with Emscripten, with turtle graphics on a `<canvas>` and the
 REPL in an [xterm.js](https://xtermjs.org/) terminal.
 
-**Demo:** <https://jburgy.github.io/ucblogo-wasm/> (French, like the Smaky)
-or <https://jburgy.github.io/ucblogo-wasm/?lang=en>.
+**Demo:** <https://bur.gy/ucblogo-wasm/> (French, like the Smaky)
+or <https://bur.gy/ucblogo-wasm/?lang=en>.
 
 ## Why UCBLogo
 
@@ -59,7 +59,7 @@ more ambitious port (SVG graphics, JSPI, JavaScript interop) discussed in
 ## Embedding
 
 ```html
-<iframe src="https://jburgy.github.io/ucblogo-wasm/" width="680" height="640"></iframe>
+<iframe src="/ucblogo-wasm/" width="680" height="640"></iframe>
 ```
 
 Not supported: the external editor (`EDIT`), mouse input and `TONE`.
